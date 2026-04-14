@@ -140,10 +140,10 @@ export default function App() {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-white overflow-hidden">
+    <div className="fixed inset-0 flex flex-col bg-black overflow-hidden">
 
-      {/* Mobile top muse picker — above the video box, hidden on xl+ */}
-      <div className="xl:hidden flex-shrink-0 bg-white border-b border-gray-100 px-4 py-2 z-40">
+      {/* Mobile top muse picker — Gen Z dark bar */}
+      <div className="xl:hidden flex-shrink-0 bg-[#0A0A0A] border-b border-white/5 px-4 pt-3 pb-2 z-40">
         <div className="flex items-center justify-around max-w-sm mx-auto">
           {DEFAULT_MUSES.map((muse) => (
             <button
@@ -153,29 +153,39 @@ export default function App() {
                 setIsCallActive(false);
                 setSelectedMuse(muse);
               }}
-              className={cn(
-                "flex flex-col items-center gap-1 px-3 py-1.5 rounded-2xl transition-all",
-                selectedMuse.id === muse.id ? "bg-pink-50" : ""
-              )}
+              className="flex flex-col items-center gap-1.5 px-3 py-1 rounded-2xl transition-all active:scale-95"
             >
               <div className="relative">
-                <img
-                  src={muse.avatar}
-                  alt={muse.name}
-                  referrerPolicy="no-referrer"
-                  className={cn(
-                    "w-9 h-9 rounded-xl object-cover border-2 transition-all",
-                    selectedMuse.id === muse.id ? "border-[#FF5E62] scale-110" : "border-transparent grayscale-[30%]"
-                  )}
-                />
+                {/* gradient ring for selected */}
+                <div
+                  className="w-11 h-11 rounded-[14px] p-[2px] transition-all"
+                  style={{
+                    background: selectedMuse.id === muse.id
+                      ? `linear-gradient(135deg, ${muse.accentColor}, ${muse.accentColor}80)`
+                      : 'transparent',
+                    boxShadow: selectedMuse.id === muse.id
+                      ? `0 0 16px 2px ${muse.accentColor}40`
+                      : 'none',
+                  }}
+                >
+                  <img
+                    src={muse.avatar}
+                    alt={muse.name}
+                    referrerPolicy="no-referrer"
+                    className={cn(
+                      "w-full h-full rounded-[12px] object-cover transition-all",
+                      selectedMuse.id !== muse.id && "grayscale-[50%] opacity-50"
+                    )}
+                  />
+                </div>
                 {muse.active && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 border-2 border-[#0A0A0A] rounded-full" />
                 )}
               </div>
-              <span className={cn(
-                "text-[9px] font-bold",
-                selectedMuse.id === muse.id ? "text-[#FF5E62]" : "text-gray-400"
-              )}>
+              <span
+                className="text-[9px] font-black uppercase tracking-wider transition-all"
+                style={{ color: selectedMuse.id === muse.id ? muse.accentColor : 'rgba(255,255,255,0.25)' }}
+              >
                 {muse.name}
               </span>
             </button>
@@ -238,7 +248,7 @@ export default function App() {
             <img
               src={authUser.photoURL}
               alt={authUser.displayName ?? ''}
-              className="w-7 h-7 rounded-full border border-gray-100 shadow-sm"
+              className="w-7 h-7 rounded-full border border-white/10 shadow-sm"
             />
           )}
           <button
@@ -247,10 +257,10 @@ export default function App() {
               await signOutUser();
               setView('landing');
             }}
-            className="p-2 bg-white/80 backdrop-blur-md rounded-xl border border-gray-100 shadow-sm hover:bg-gray-50 transition-all"
+            className="p-2 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 hover:bg-white/15 transition-all"
             title="Sign out"
           >
-            <LogOut className="w-3.5 h-3.5 text-gray-500" />
+            <LogOut className="w-3.5 h-3.5 text-white/50" />
           </button>
         </div>
       )}
