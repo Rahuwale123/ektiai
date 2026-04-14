@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Mic, MicOff, PhoneOff, Video, VideoOff, Play } from 'lucide-react';
+import { Mic, MicOff, PhoneOff, Video, VideoOff, Play, Clock, Wallet } from 'lucide-react';
 import { CameraPreview } from '../CameraPreview';
 import { cn } from '../../lib/utils';
 import { Muse } from './Sidebar';
@@ -11,6 +11,8 @@ interface FaceTimePanelProps {
   isConnecting: boolean;
   isSpeaking: boolean;
   selectedMuse: Muse;
+  callTimeFormatted?: string;
+  walletBalance?: number;
   onToggleCall: () => void;
   onToggleMic: () => void;
   onToggleCamera: () => void;
@@ -23,6 +25,8 @@ export function FaceTimePanel({
   isConnecting,
   isSpeaking,
   selectedMuse,
+  callTimeFormatted,
+  walletBalance,
   onToggleCall,
   onToggleMic,
   onToggleCamera,
@@ -43,8 +47,8 @@ export function FaceTimePanel({
         style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }}
       />
 
-      {/* Status chip — top left */}
-      <div className="absolute top-4 left-4 z-30">
+      {/* Status strip — top left */}
+      <div className="absolute top-4 left-4 z-30 flex items-center gap-2">
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 backdrop-blur-md border border-white/8">
           <div className={cn(
             "w-1.5 h-1.5 rounded-full transition-colors",
@@ -54,6 +58,25 @@ export function FaceTimePanel({
             {isCallActive ? "Live" : "Ready"}
           </span>
         </div>
+        {isCallActive && callTimeFormatted && (
+          <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/5 backdrop-blur-md border border-white/8">
+            <Clock className="w-2.5 h-2.5 text-white/40" />
+            <span className="text-[9px] font-black text-white/40 tabular-nums">{callTimeFormatted}</span>
+          </div>
+        )}
+        {isCallActive && walletBalance !== undefined && (
+          <div className={cn(
+            "flex items-center gap-1 px-2.5 py-1.5 rounded-full backdrop-blur-md border tabular-nums",
+            walletBalance <= 4
+              ? "bg-red-500/15 border-red-400/30"
+              : "bg-white/5 border-white/8"
+          )}>
+            <Wallet className={cn("w-2.5 h-2.5", walletBalance <= 4 ? "text-red-400" : "text-white/40")} />
+            <span className={cn("text-[9px] font-black", walletBalance <= 4 ? "text-red-400" : "text-white/40")}>
+              ₹{walletBalance.toFixed(0)}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* User camera PiP */}
