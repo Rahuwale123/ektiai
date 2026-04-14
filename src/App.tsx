@@ -82,12 +82,12 @@ export default function App() {
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Listen to Firebase auth state — auto-advance view if already signed in
+  // Listen to Firebase auth state — if already signed in (refresh/revisit), go straight to app
   useEffect(() => {
     const unsub = onAuthChange((user) => {
       setAuthUser(user);
       setAuthLoading(false);
-      if (user && view === 'login') setView('app');
+      if (user) setView('app');   // always skip landing+login when authenticated
     });
     return unsub;
   }, []);
@@ -141,7 +141,49 @@ export default function App() {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-white overflow-hidden">
-      {/* Layout: sidebar + main on desktop, stacked on mobile */}
+
+      {/* Mobile top muse picker — above the video box, hidden on xl+ */}
+      <div className="xl:hidden flex-shrink-0 bg-white border-b border-gray-100 px-4 py-2 z-40">
+        <div className="flex items-center justify-around max-w-sm mx-auto">
+          {DEFAULT_MUSES.map((muse) => (
+            <button
+              key={muse.id}
+              onClick={() => {
+                if (isCallActive) disconnect();
+                setIsCallActive(false);
+                setSelectedMuse(muse);
+              }}
+              className={cn(
+                "flex flex-col items-center gap-1 px-3 py-1.5 rounded-2xl transition-all",
+                selectedMuse.id === muse.id ? "bg-pink-50" : ""
+              )}
+            >
+              <div className="relative">
+                <img
+                  src={muse.avatar}
+                  alt={muse.name}
+                  referrerPolicy="no-referrer"
+                  className={cn(
+                    "w-9 h-9 rounded-xl object-cover border-2 transition-all",
+                    selectedMuse.id === muse.id ? "border-[#FF5E62] scale-110" : "border-transparent grayscale-[30%]"
+                  )}
+                />
+                {muse.active && (
+                  <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
+                )}
+              </div>
+              <span className={cn(
+                "text-[9px] font-bold",
+                selectedMuse.id === muse.id ? "text-[#FF5E62]" : "text-gray-400"
+              )}>
+                {muse.name}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Layout: sidebar + main */}
       <div className="flex flex-1 min-h-0">
         {/* Left Sidebar — desktop only */}
         <Sidebar
@@ -154,7 +196,7 @@ export default function App() {
         />
 
         {/* Main Panel */}
-        <div className="flex-1 min-w-0 h-full relative pb-[72px] xl:pb-0">
+        <div className="flex-1 min-w-0 h-full relative overflow-hidden">
           <FaceTimePanel
             isCallActive={isCallActive}
             isCameraOn={isCameraOn}
@@ -169,47 +211,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Mobile bottom muse picker — hidden on xl+ (sidebar takes over) */}
-      <div className="xl:hidden fixed bottom-0 inset-x-0 z-40 bg-white/90 backdrop-blur-xl border-t border-gray-100 px-4 py-3 safe-area-pb">
-        <div className="flex items-center justify-around max-w-sm mx-auto">
-          {DEFAULT_MUSES.map((muse) => (
-            <button
-              key={muse.id}
-              onClick={() => {
-                if (isCallActive) disconnect();
-                setIsCallActive(false);
-                setSelectedMuse(muse);
-              }}
-              className={cn(
-                "flex flex-col items-center gap-1.5 px-3 py-1.5 rounded-2xl transition-all",
-                selectedMuse.id === muse.id ? "bg-pink-50" : ""
-              )}
-            >
-              <div className="relative">
-                <img
-                  src={muse.avatar}
-                  alt={muse.name}
-                  referrerPolicy="no-referrer"
-                  className={cn(
-                    "w-10 h-10 rounded-xl object-cover border-2 transition-all",
-                    selectedMuse.id === muse.id ? "border-[#FF5E62] scale-110" : "border-transparent"
-                  )}
-                />
-                {muse.active && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
-                )}
-              </div>
-              <span className={cn(
-                "text-[10px] font-bold",
-                selectedMuse.id === muse.id ? "text-[#FF5E62]" : "text-gray-400"
-              )}>
-                {muse.name}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Error toast */}
       <AnimatePresence>
         {error && (
@@ -218,40 +219,26 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             className={cn(
-              "fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full border text-xs font-bold uppercase tracking-widest backdrop-blur-xl z-[100] shadow-xl flex items-center gap-3",
+              "fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full border text-xs font-bold uppercase tracking-widest backdrop-blur-xl z-[100] shadow-xl flex items-center gap-2 whitespace-nowrap",
               error.includes("Free limit")
                 ? "bg-amber-50 text-amber-600 border-amber-100"
                 : "bg-red-50 text-red-500 border-red-100"
             )}
           >
-            <div className={cn(
-              "w-2 h-2 rounded-full animate-pulse",
-              error.includes("Free limit") ? "bg-amber-500" : "bg-red-500"
-            )} />
+            <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", error.includes("Free limit") ? "bg-amber-500" : "bg-red-500")} />
             {error}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Back to landing */}
-      <button
-        onClick={() => {
-          if (isCallActive) disconnect();
-          setView('landing');
-        }}
-        className="fixed top-4 left-4 z-[60] p-2.5 bg-white/80 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm hover:bg-gray-50 transition-all xl:hidden"
-      >
-        <ArrowLeft className="w-4 h-4 text-gray-600" />
-      </button>
-
-      {/* Sign out — top right */}
+      {/* Sign out — top right corner */}
       {authUser && (
-        <div className="fixed top-4 right-4 z-[60] flex items-center gap-2">
+        <div className="fixed top-3 right-3 z-[60] flex items-center gap-2">
           {authUser.photoURL && (
             <img
               src={authUser.photoURL}
               alt={authUser.displayName ?? ''}
-              className="w-8 h-8 rounded-full border border-gray-100 shadow-sm"
+              className="w-7 h-7 rounded-full border border-gray-100 shadow-sm"
             />
           )}
           <button
@@ -260,10 +247,10 @@ export default function App() {
               await signOutUser();
               setView('landing');
             }}
-            className="p-2.5 bg-white/80 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm hover:bg-gray-50 transition-all"
+            className="p-2 bg-white/80 backdrop-blur-md rounded-xl border border-gray-100 shadow-sm hover:bg-gray-50 transition-all"
             title="Sign out"
           >
-            <LogOut className="w-4 h-4 text-gray-500" />
+            <LogOut className="w-3.5 h-3.5 text-gray-500" />
           </button>
         </div>
       )}
