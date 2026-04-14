@@ -5,13 +5,14 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mic, MicOff, ArrowLeft, LogOut } from 'lucide-react';
+import { ArrowLeft, LogOut } from 'lucide-react';
 import { useLiveAPI } from './lib/useLiveAPI';
 import { onAuthChange, signOutUser, type User } from './lib/firebase';
 import { LandingPage } from './components/landing/LandingPage';
 import { LoginScreen } from './components/landing/LoginScreen';
 import { Sidebar, Muse } from './components/dashboard/Sidebar';
 import { FaceTimePanel } from './components/dashboard/FaceTimePanel';
+import { MobileMuseSelect } from './components/dashboard/MobileMuseSelect';
 import { cn } from './lib/utils';
 
 const DEFAULT_MUSES: Muse[] = [
@@ -61,6 +62,7 @@ const MUSE_INSTRUCTIONS: Record<string, string> = {
 };
 
 type View = 'landing' | 'login' | 'app';
+type MobileScreen = 'select' | 'call';
 
 export default function App() {
   const {
@@ -78,16 +80,17 @@ export default function App() {
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [view, setView] = useState<View>('landing');
+  const [mobileScreen, setMobileScreen] = useState<MobileScreen>('select');
   const [selectedMuse, setSelectedMuse] = useState<Muse>(DEFAULT_MUSES[0]);
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Listen to Firebase auth state — if already signed in (refresh/revisit), go straight to app
+  // Listen to Firebase auth state — if already signed in, go straight to app
   useEffect(() => {
     const unsub = onAuthChange((user) => {
       setAuthUser(user);
       setAuthLoading(false);
-      if (user) setView('app');   // always skip landing+login when authenticated
+      if (user) setView('app');
     });
     return unsub;
   }, []);
@@ -115,6 +118,34 @@ export default function App() {
     }
   };
 
+  // Mobile: user taps a character card → go to call screen
+  const handleMobileSelect = (muse: Muse) => {
+    if (isCallActive) disconnect();
+    setIsCallActive(false);
+    setSelectedMuse(muse);
+    setMobileScreen('call');
+  };
+
+  // Mobile: back button on call screen
+  const handleMobileBack = () => {
+    if (isCallActive) disconnect();
+    setIsCallActive(false);
+    setMobileScreen('select');
+  };
+
+  // Desktop: switch muse from sidebar
+  const handleDesktopMuseSelect = (muse: Muse) => {
+    if (isCallActive) disconnect();
+    setIsCallActive(false);
+    setSelectedMuse(muse);
+  };
+
+  const handleSignOut = async () => {
+    if (isCallActive) disconnect();
+    await signOutUser();
+    setView('landing');
+  };
+
   // Start mic as soon as session is open
   useEffect(() => {
     if (isConnected && !isRecording) {
@@ -125,7 +156,7 @@ export default function App() {
   // Wait for Firebase to resolve auth state before rendering
   if (authLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-white">
+      <div className="fixed inset-0 flex items-center justify-center bg-[#070707]">
         <div className="w-8 h-8 rounded-full border-2 border-[#FF5E62]/30 border-t-[#FF5E62] animate-spin" />
       </div>
     );
@@ -140,72 +171,102 @@ export default function App() {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-black overflow-hidden">
+    <div className="fixed inset-0 bg-[#070707] overflow-hidden">
 
-      {/* Mobile top muse picker — Gen Z dark bar */}
-      <div className="xl:hidden flex-shrink-0 bg-[#0A0A0A] border-b border-white/5 px-4 pt-3 pb-2 z-40">
-        <div className="flex items-center justify-around max-w-sm mx-auto">
-          {DEFAULT_MUSES.map((muse) => (
-            <button
-              key={muse.id}
-              onClick={() => {
-                if (isCallActive) disconnect();
-                setIsCallActive(false);
-                setSelectedMuse(muse);
-              }}
-              className="flex flex-col items-center gap-1.5 px-3 py-1 rounded-2xl transition-all active:scale-95"
+      {/* ── MOBILE layout (hidden on xl+) ── */}
+      <div className="xl:hidden h-full">
+        <AnimatePresence mode="wait">
+
+          {/* Screen 1 — Character selection */}
+          {mobileScreen === 'select' && (
+            <motion.div
+              key="select"
+              initial={{ opacity: 0, x: -24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -24 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              className="h-full"
             >
-              <div className="relative">
-                {/* gradient ring for selected */}
-                <div
-                  className="w-11 h-11 rounded-[14px] p-[2px] transition-all"
-                  style={{
-                    background: selectedMuse.id === muse.id
-                      ? `linear-gradient(135deg, ${muse.accentColor}, ${muse.accentColor}80)`
-                      : 'transparent',
-                    boxShadow: selectedMuse.id === muse.id
-                      ? `0 0 16px 2px ${muse.accentColor}40`
-                      : 'none',
-                  }}
+              <MobileMuseSelect
+                muses={DEFAULT_MUSES}
+                authUser={authUser}
+                onSelect={handleMobileSelect}
+                onSignOut={handleSignOut}
+              />
+            </motion.div>
+          )}
+
+          {/* Screen 2 — Call screen */}
+          {mobileScreen === 'call' && (
+            <motion.div
+              key="call"
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 24 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              className="h-full flex flex-col"
+            >
+              {/* Call top nav */}
+              <div className="flex-shrink-0 bg-[#0A0A0A] border-b border-white/5 px-4 py-3 flex items-center gap-3 z-40">
+                <button
+                  onClick={handleMobileBack}
+                  className="p-2 rounded-xl bg-white/8 border border-white/10 hover:bg-white/12 transition-all active:scale-95 flex-shrink-0"
                 >
-                  <img
-                    src={muse.avatar}
-                    alt={muse.name}
-                    referrerPolicy="no-referrer"
-                    className={cn(
-                      "w-full h-full rounded-[12px] object-cover transition-all",
-                      selectedMuse.id !== muse.id && "grayscale-[50%] opacity-50"
-                    )}
-                  />
+                  <ArrowLeft className="w-4 h-4 text-white/60" />
+                </button>
+
+                <img
+                  src={selectedMuse.avatar}
+                  alt={selectedMuse.name}
+                  referrerPolicy="no-referrer"
+                  className="w-9 h-9 rounded-xl object-cover border border-white/15 flex-shrink-0"
+                />
+
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-black leading-tight truncate">{selectedMuse.name}</p>
+                  <p
+                    className="text-[9px] font-bold uppercase tracking-wider truncate"
+                    style={{ color: selectedMuse.accentColor }}
+                  >
+                    {selectedMuse.personality}
+                  </p>
                 </div>
-                {muse.active && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 border-2 border-[#0A0A0A] rounded-full" />
+
+                {isCallActive && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/15 border border-red-500/25 flex-shrink-0">
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                    <span className="text-[8px] font-black text-red-400 uppercase tracking-wider">Live</span>
+                  </div>
                 )}
               </div>
-              <span
-                className="text-[9px] font-black uppercase tracking-wider transition-all"
-                style={{ color: selectedMuse.id === muse.id ? muse.accentColor : 'rgba(255,255,255,0.25)' }}
-              >
-                {muse.name}
-              </span>
-            </button>
-          ))}
-        </div>
+
+              {/* Call panel fills rest */}
+              <div className="flex-1 min-h-0">
+                <FaceTimePanel
+                  isCallActive={isCallActive}
+                  isCameraOn={isCameraOn}
+                  isRecording={isRecording}
+                  isConnecting={isConnecting}
+                  isSpeaking={isSpeaking}
+                  selectedMuse={selectedMuse}
+                  onToggleCall={handleToggleCall}
+                  onToggleMic={() => isRecording ? stopRecording() : startRecording()}
+                  onToggleCamera={() => setIsCameraOn(!isCameraOn)}
+                />
+              </div>
+            </motion.div>
+          )}
+
+        </AnimatePresence>
       </div>
 
-      {/* Layout: sidebar + main */}
-      <div className="flex flex-1 min-h-0">
-        {/* Left Sidebar — desktop only */}
+      {/* ── DESKTOP layout (hidden on mobile) ── */}
+      <div className="hidden xl:flex h-full">
         <Sidebar
           selectedMuseId={selectedMuse.id}
-          onSelectMuse={(muse) => {
-            if (isCallActive) disconnect();
-            setIsCallActive(false);
-            setSelectedMuse(muse);
-          }}
+          onSelectMuse={handleDesktopMuseSelect}
         />
 
-        {/* Main Panel */}
         <div className="flex-1 min-w-0 h-full relative overflow-hidden">
           <FaceTimePanel
             isCallActive={isCallActive}
@@ -219,9 +280,29 @@ export default function App() {
             onToggleCamera={() => setIsCameraOn(!isCameraOn)}
           />
         </div>
+
+        {/* Desktop sign-out */}
+        {authUser && (
+          <div className="fixed top-3 right-3 z-[60] flex items-center gap-2">
+            {authUser.photoURL && (
+              <img
+                src={authUser.photoURL}
+                alt={authUser.displayName ?? ''}
+                className="w-7 h-7 rounded-full border border-white/10"
+              />
+            )}
+            <button
+              onClick={handleSignOut}
+              className="p-2 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 hover:bg-white/15 transition-all"
+              title="Sign out"
+            >
+              <LogOut className="w-3.5 h-3.5 text-white/50" />
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Error toast */}
+      {/* Error toast — both layouts */}
       <AnimatePresence>
         {error && (
           <motion.div
@@ -231,39 +312,15 @@ export default function App() {
             className={cn(
               "fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full border text-xs font-bold uppercase tracking-widest backdrop-blur-xl z-[100] shadow-xl flex items-center gap-2 whitespace-nowrap",
               error.includes("Free limit")
-                ? "bg-amber-50 text-amber-600 border-amber-100"
-                : "bg-red-50 text-red-500 border-red-100"
+                ? "bg-amber-950/80 text-amber-400 border-amber-800/50"
+                : "bg-red-950/80 text-red-400 border-red-800/50"
             )}
           >
-            <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", error.includes("Free limit") ? "bg-amber-500" : "bg-red-500")} />
+            <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", error.includes("Free limit") ? "bg-amber-400" : "bg-red-400")} />
             {error}
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Sign out — top right corner */}
-      {authUser && (
-        <div className="fixed top-3 right-3 z-[60] flex items-center gap-2">
-          {authUser.photoURL && (
-            <img
-              src={authUser.photoURL}
-              alt={authUser.displayName ?? ''}
-              className="w-7 h-7 rounded-full border border-white/10 shadow-sm"
-            />
-          )}
-          <button
-            onClick={async () => {
-              if (isCallActive) disconnect();
-              await signOutUser();
-              setView('landing');
-            }}
-            className="p-2 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 hover:bg-white/15 transition-all"
-            title="Sign out"
-          >
-            <LogOut className="w-3.5 h-3.5 text-white/50" />
-          </button>
-        </div>
-      )}
     </div>
   );
 }
