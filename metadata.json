@@ -1,0 +1,5 @@
+{
+  "name": "Nocturne: Flirty AI",
+  "description": "A seductive, mysterious AI companion for voice-to-voice flirtatious conversations.",
+  "requestFramePermissions": ["camera", "microphone"]
+}

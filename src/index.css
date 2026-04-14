@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", serif;
+}
+
+@layer base {
+  body {
+    @apply bg-white text-[#1A1A1A] antialiased overflow-x-hidden;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  button, a, [role="button"] {
+    @apply cursor-pointer;
+  }
+}
+
+.atmosphere {
+  background: 
+    radial-gradient(circle at 50% -20%, rgba(255, 94, 98, 0.1) 0%, transparent 60%),
+    radial-gradient(circle at 0% 100%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 100% 100%, rgba(236, 72, 153, 0.05) 0%, transparent 40%);
+  filter: blur(100px);
+  opacity: 0.8;
+}
+
+.glass {
+  @apply bg-white/[0.02] backdrop-blur-3xl border border-white/[0.05];
+}
+
+.glass-dark {
+  @apply bg-black/40 backdrop-blur-3xl border border-white/[0.05];
+}
+
+.mirror {
+  transform: scaleX(-1);
+}
+
+.text-glow {
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
