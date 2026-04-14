@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     const response = await fetch(`${BASE}/pg/orders/${orderId}`, {
       method: 'GET',
       headers: {
-        'x-api-version': '2023-08-01',
+        'x-api-version': '2025-01-01',
         'x-client-id': CASHFREE_APP_ID,
         'x-client-secret': CASHFREE_SECRET_KEY,
       },
@@ -31,10 +31,18 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     if (!response.ok) {
-      return res.status(500).json({ error: data.message || 'Verification failed', details: data });
+      return res.status(500).json({
+        error: data.message || 'Verification failed',
+        code: data.code,
+        details: data,
+      });
     }
 
-    res.json({ paid: data.order_status === 'PAID', status: data.order_status, amount: data.order_amount });
+    res.json({
+      paid: data.order_status === 'PAID',
+      status: data.order_status,
+      amount: data.order_amount,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message || 'Internal server error' });
   }

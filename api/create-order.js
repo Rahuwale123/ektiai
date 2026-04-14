@@ -21,33 +21,45 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Cashfree credentials not configured on server' });
   }
 
+  // order_id: 3–45 chars, alphanumeric + underscore/hyphen only
   const orderId = `ekti_${userId.slice(0, 8)}_${Date.now()}`;
+  // customer_id: 3–50 alphanumeric chars only (no special chars)
+  const customerId = userId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 50).padEnd(3, '0');
 
   try {
     const response = await fetch(`${BASE}/pg/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-version': '2023-08-01',
+        'x-api-version': '2025-01-01',
         'x-client-id': CASHFREE_APP_ID,
         'x-client-secret': CASHFREE_SECRET_KEY,
+        'x-idempotency-key': orderId,
       },
       body: JSON.stringify({
         order_id: orderId,
         order_amount: amount,
         order_currency: 'INR',
         customer_details: {
-          customer_id: userId.slice(0, 50),
+          customer_id: customerId,
+          customer_phone: '9999999999',
           customer_email: userEmail,
           customer_name: userName || 'User',
-          customer_phone: '9999999999',
+        },
+        order_meta: {
+          return_url: `https://ektiai.vercel.app?order_id={order_id}&order_status={order_status}`,
+          notify_url: `https://ektiai.vercel.app/api/webhook`,
         },
       }),
     });
 
     const data = await response.json();
     if (!response.ok) {
-      return res.status(500).json({ error: data.message || data.error || 'Failed to create order', details: data });
+      return res.status(500).json({
+        error: data.message || 'Failed to create order',
+        code: data.code,
+        details: data,
+      });
     }
 
     res.json({
