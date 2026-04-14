@@ -4,7 +4,13 @@
  */
 
 export function pcmToFloat32(pcmData: Uint8Array): Float32Array {
-  const int16Array = new Int16Array(pcmData.buffer);
+  // Ensure we handle potential alignment issues and offsets correctly
+  const dataView = new DataView(pcmData.buffer, pcmData.byteOffset, pcmData.byteLength);
+  const int16Array = new Int16Array(pcmData.length / 2);
+  for (let i = 0; i < int16Array.length; i++) {
+    int16Array[i] = dataView.getInt16(i * 2, true); // true for little-endian (PCM standard)
+  }
+  
   const float32Array = new Float32Array(int16Array.length);
   for (let i = 0; i < int16Array.length; i++) {
     float32Array[i] = int16Array[i] / 32768;
@@ -30,16 +36,36 @@ export class AudioStreamer {
     this.sampleRate = sampleRate;
   }
 
-  private init() {
+  private init(sampleRate?: number) {
+    if (sampleRate && sampleRate !== this.sampleRate) {
+      if (this.audioContext) {
+        this.audioContext.close().catch(console.error);
+        this.audioContext = null;
+      }
+      this.sampleRate = sampleRate;
+    }
+
     if (!this.audioContext) {
       this.audioContext = new AudioContext({ sampleRate: this.sampleRate });
       this.nextStartTime = this.audioContext.currentTime;
     }
   }
 
-  async addPCMChunk(chunk: Uint8Array) {
-    this.init();
+  async resume(sampleRate?: number) {
+    this.init(sampleRate);
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      await this.audioContext.resume();
+    }
+  }
+
+  async addPCMChunk(chunk: Uint8Array, sampleRate?: number) {
+    this.init(sampleRate);
     if (!this.audioContext) return;
+    
+    // Resume context if it was suspended (browser policy)
+    if (this.audioContext.state === 'suspended') {
+      await this.audioContext.resume();
+    }
 
     const float32Data = pcmToFloat32(chunk);
     const audioBuffer = this.audioContext.createBuffer(1, float32Data.length, this.sampleRate);

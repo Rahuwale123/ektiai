@@ -10,36 +10,44 @@ export interface Muse {
   avatar: string;
   personality: string;
   tags: string[];
+  voice: string;
+  accentColor: string;
 }
 
 const muses: Muse[] = [
   {
     id: '1',
     name: 'Ritu',
-    lastMessage: 'Typing a message...',
+    lastMessage: 'heyy... you finally showed up 🖤',
     time: 'Active',
     active: true,
-    avatar: 'https://picsum.photos/seed/ritu/200/200',
-    personality: 'Playful & Witty',
-    tags: ['Bengaluru Girl', 'Techie', 'Witty']
+    avatar: 'https://picsum.photos/seed/ritu/400/400',
+    personality: 'Playful & Dark',
+    tags: ['Bengaluru Girl', 'Witty', 'Dark Edge'],
+    voice: 'Zephyr',
+    accentColor: '#FF5E62',
   },
   {
     id: '2',
     name: 'Ananya',
-    lastMessage: "The darkness has its own charm...",
-    time: 'Yesterday',
-    avatar: 'https://picsum.photos/seed/ananya/200/200',
-    personality: 'Self-Flirting Dark',
-    tags: ['Mysterious', 'Poetic', 'Deep']
+    lastMessage: 'I want you to say that again...',
+    time: '2m ago',
+    avatar: 'https://picsum.photos/seed/ananya/400/400',
+    personality: 'Dark & Intensely Flirty',
+    tags: ['Dangerous', 'Unfiltered', 'Intense'],
+    voice: 'Erinome',
+    accentColor: '#7C3AED',
   },
   {
     id: '3',
     name: 'Kavya',
-    lastMessage: 'Hey, you free for a quick chat?',
-    time: 'Tue',
-    avatar: 'https://picsum.photos/seed/kavya/200/200',
-    personality: 'Flirty AI',
-    tags: ['Charming', 'Smart', 'Bold']
+    lastMessage: 'I\'ll make the first move. Always do 😈',
+    time: '5m ago',
+    avatar: 'https://picsum.photos/seed/kavya/400/400',
+    personality: 'Sexy & Takes Charge',
+    tags: ['Bold', 'Seductive', 'Fearless'],
+    voice: 'Leda',
+    accentColor: '#F59E0B',
   }
 ];
 
@@ -53,7 +61,7 @@ export function Sidebar({ selectedMuseId, onSelectMuse }: SidebarProps) {
     <div className="w-80 h-full bg-white border-r border-gray-100 flex flex-col p-6 overflow-y-auto hidden xl:flex">
       <div className="mb-10">
         <h2 className="text-2xl font-bold text-[#1A1A1A] mb-1">Your Muses</h2>
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Bengaluru's Finest</p>
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Choose your companion</p>
       </div>
 
       <div className="space-y-2">
@@ -68,9 +76,9 @@ export function Sidebar({ selectedMuseId, onSelectMuse }: SidebarProps) {
             )}
           >
             <div className="relative">
-              <img 
-                src={muse.avatar} 
-                className="w-12 h-12 rounded-2xl object-cover" 
+              <img
+                src={muse.avatar}
+                className="w-12 h-12 rounded-2xl object-cover"
                 alt={muse.name}
                 referrerPolicy="no-referrer"
               />
@@ -92,6 +100,10 @@ export function Sidebar({ selectedMuseId, onSelectMuse }: SidebarProps) {
             </div>
           </motion.div>
         ))}
+      </div>
+
+      <div className="mt-auto pt-6 border-t border-gray-50">
+        <p className="text-[10px] text-gray-300 text-center uppercase tracking-widest font-bold">Powered by Gemini Live</p>
       </div>
     </div>
   );
