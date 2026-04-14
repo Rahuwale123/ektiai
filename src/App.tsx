@@ -140,59 +140,75 @@ export default function App() {
   }
 
   return (
-    <div className="fixed inset-0 flex bg-white overflow-hidden">
-      {/* Left Sidebar */}
-      <Sidebar
-        selectedMuseId={selectedMuse.id}
-        onSelectMuse={(muse) => {
-          if (isCallActive) disconnect();
-          setIsCallActive(false);
-          setSelectedMuse(muse);
-        }}
-      />
-
-      {/* Main Panel */}
-      <div className="flex-1 h-full relative">
-        <FaceTimePanel
-          isCallActive={isCallActive}
-          isCameraOn={isCameraOn}
-          isRecording={isRecording}
-          isConnecting={isConnecting}
-          isSpeaking={isSpeaking}
-          selectedMuse={selectedMuse}
-          onToggleCall={handleToggleCall}
-          onToggleMic={() => isRecording ? stopRecording() : startRecording()}
-          onToggleCamera={() => setIsCameraOn(!isCameraOn)}
+    <div className="fixed inset-0 flex flex-col bg-white overflow-hidden">
+      {/* Layout: sidebar + main on desktop, stacked on mobile */}
+      <div className="flex flex-1 min-h-0">
+        {/* Left Sidebar — desktop only */}
+        <Sidebar
+          selectedMuseId={selectedMuse.id}
+          onSelectMuse={(muse) => {
+            if (isCallActive) disconnect();
+            setIsCallActive(false);
+            setSelectedMuse(muse);
+          }}
         />
+
+        {/* Main Panel */}
+        <div className="flex-1 min-w-0 h-full relative pb-[72px] xl:pb-0">
+          <FaceTimePanel
+            isCallActive={isCallActive}
+            isCameraOn={isCameraOn}
+            isRecording={isRecording}
+            isConnecting={isConnecting}
+            isSpeaking={isSpeaking}
+            selectedMuse={selectedMuse}
+            onToggleCall={handleToggleCall}
+            onToggleMic={() => isRecording ? stopRecording() : startRecording()}
+            onToggleCamera={() => setIsCameraOn(!isCameraOn)}
+          />
+        </div>
       </div>
 
-      {/* Mobile call controls */}
-      <AnimatePresence>
-        {isCallActive && (
-          <motion.div
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
-            className="2xl:hidden fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white/80 backdrop-blur-xl p-4 rounded-full shadow-2xl border border-gray-100 z-50"
-          >
+      {/* Mobile bottom muse picker — hidden on xl+ (sidebar takes over) */}
+      <div className="xl:hidden fixed bottom-0 inset-x-0 z-40 bg-white/90 backdrop-blur-xl border-t border-gray-100 px-4 py-3 safe-area-pb">
+        <div className="flex items-center justify-around max-w-sm mx-auto">
+          {DEFAULT_MUSES.map((muse) => (
             <button
-              onClick={() => isRecording ? stopRecording() : startRecording()}
+              key={muse.id}
+              onClick={() => {
+                if (isCallActive) disconnect();
+                setIsCallActive(false);
+                setSelectedMuse(muse);
+              }}
               className={cn(
-                "p-4 rounded-full transition-all",
-                isRecording ? "bg-pink-50 text-[#FF5E62]" : "bg-gray-100 text-gray-400"
+                "flex flex-col items-center gap-1.5 px-3 py-1.5 rounded-2xl transition-all",
+                selectedMuse.id === muse.id ? "bg-pink-50" : ""
               )}
             >
-              {isRecording ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+              <div className="relative">
+                <img
+                  src={muse.avatar}
+                  alt={muse.name}
+                  referrerPolicy="no-referrer"
+                  className={cn(
+                    "w-10 h-10 rounded-xl object-cover border-2 transition-all",
+                    selectedMuse.id === muse.id ? "border-[#FF5E62] scale-110" : "border-transparent"
+                  )}
+                />
+                {muse.active && (
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
+                )}
+              </div>
+              <span className={cn(
+                "text-[10px] font-bold",
+                selectedMuse.id === muse.id ? "text-[#FF5E62]" : "text-gray-400"
+              )}>
+                {muse.name}
+              </span>
             </button>
-            <button
-              onClick={handleToggleCall}
-              className="px-8 py-4 rounded-full bg-red-500 text-white font-bold text-sm uppercase tracking-widest shadow-lg shadow-red-200"
-            >
-              End Call
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          ))}
+        </div>
+      </div>
 
       {/* Error toast */}
       <AnimatePresence>
@@ -223,14 +239,14 @@ export default function App() {
           if (isCallActive) disconnect();
           setView('landing');
         }}
-        className="fixed top-6 left-6 z-[60] p-3 bg-white/80 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm hover:bg-gray-50 transition-all xl:hidden"
+        className="fixed top-4 left-4 z-[60] p-2.5 bg-white/80 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm hover:bg-gray-50 transition-all xl:hidden"
       >
-        <ArrowLeft className="w-5 h-5 text-gray-600" />
+        <ArrowLeft className="w-4 h-4 text-gray-600" />
       </button>
 
-      {/* Sign out — top right, always visible */}
+      {/* Sign out — top right */}
       {authUser && (
-        <div className="fixed top-6 right-6 z-[60] flex items-center gap-3">
+        <div className="fixed top-4 right-4 z-[60] flex items-center gap-2">
           {authUser.photoURL && (
             <img
               src={authUser.photoURL}
