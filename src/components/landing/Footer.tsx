@@ -11,7 +11,7 @@ export function Footer() {
               <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-[#FF5E62] flex items-center justify-center">
                 <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-white" />
               </div>
-              <span className="text-lg md:text-xl font-bold text-[#1A1A1A] tracking-tight">Aflirt AI</span>
+              <span className="text-lg md:text-xl font-bold text-[#1A1A1A] tracking-tight">Ekti AI</span>
             </div>
             <p className="text-sm text-[#666666] leading-relaxed mb-5 md:mb-8 max-w-xs">
               The premier platform for practicing meaningful connections using advanced AI.
@@ -46,7 +46,7 @@ export function Footer() {
         </div>
 
         <div className="flex flex-col sm:flex-row justify-between items-center pt-8 md:pt-12 border-t border-gray-100 gap-3">
-          <p className="text-xs text-gray-400">© 2024 Aflirt AI. All rights reserved.</p>
+          <p className="text-xs text-gray-400">© 2024 Ekti AI. All rights reserved.</p>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500" />
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Platform Status: Optimal</span>

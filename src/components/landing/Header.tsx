@@ -18,13 +18,13 @@ export function Header({ onGetStarted }: HeaderProps) {
             <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-[#FF5E62] flex items-center justify-center">
               <Sparkles className="w-4 h-4 md:w-6 md:h-6 text-white" />
             </div>
-            <span className="text-xl md:text-2xl font-bold text-[#1A1A1A] tracking-tight">Aflirt AI</span>
+            <span className="text-xl md:text-2xl font-bold text-[#1A1A1A] tracking-tight">Ekti AI</span>
           </div>
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-8 lg:gap-10">
             <a href="#how-it-works" className="text-sm font-medium text-[#666666] hover:text-[#FF5E62] transition-colors">How It Works</a>
-            <a href="#why-aflirt" className="text-sm font-medium text-[#666666] hover:text-[#FF5E62] transition-colors">Why Aflirt?</a>
+            <a href="#why-aflirt" className="text-sm font-medium text-[#666666] hover:text-[#FF5E62] transition-colors">Why Ekti?</a>
             <a href="#success-stories" className="text-sm font-medium text-[#666666] hover:text-[#FF5E62] transition-colors">Stories</a>
           </nav>
 
@@ -60,7 +60,7 @@ export function Header({ onGetStarted }: HeaderProps) {
             className="md:hidden bg-white border-t border-gray-100 overflow-hidden"
           >
             <div className="px-4 py-4 flex flex-col gap-1">
-              {['How It Works', 'Why Aflirt?', 'Success Stories'].map((item) => (
+              {['How It Works', 'Why Ekti?', 'Success Stories'].map((item) => (
                 <a
                   key={item}
                   href={`#${item.toLowerCase().replace(/\s+/g, '-').replace('?', '')}`}

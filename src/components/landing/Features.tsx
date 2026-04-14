@@ -31,7 +31,7 @@ export function Features() {
         <div className="text-center mb-12 md:mb-20">
           <h2 className="text-3xl sm:text-4xl font-bold text-[#1A1A1A] mb-4">Why Connection Matters</h2>
           <p className="text-base sm:text-lg text-[#666666] max-w-2xl mx-auto px-4">
-            In a world of swiping, the art of real conversation is being lost. Aflirt is your personal laboratory for social connection.
+            In a world of swiping, the art of real conversation is being lost. Ekti Ai is your personal laboratory for social connection.
           </p>
         </div>
 

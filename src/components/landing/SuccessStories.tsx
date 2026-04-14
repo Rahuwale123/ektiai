@@ -4,7 +4,7 @@ import { Star } from 'lucide-react';
 export function SuccessStories() {
   const testimonials = [
     {
-      text: "I'm pretty introverted, and Aflirt gave me a safe place to practice talking to women. My real-world dates have been way more relaxed lately.",
+      text: "I'm pretty introverted, and Ekti gave me a safe place to practice talking to women. My real-world dates have been way more relaxed lately.",
       author: "David L.",
       role: "Software Engineer",
       image: "https://picsum.photos/seed/david/100/100"
