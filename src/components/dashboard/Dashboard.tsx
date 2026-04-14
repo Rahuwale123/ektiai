@@ -157,7 +157,7 @@ export function Dashboard({
         </div>
 
         <p className="text-black/40 text-sm mt-4">
-          Pick a companion · ₹{RATE_PER_MIN_INR}/min billed live
+          {/* Pick a companion · ₹{RATE_PER_MIN_INR}/min billed live */}
         </p>
       </div>
 
