@@ -5,8 +5,9 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mic, MicOff, ArrowLeft } from 'lucide-react';
+import { Mic, MicOff, ArrowLeft, LogOut } from 'lucide-react';
 import { useLiveAPI } from './lib/useLiveAPI';
+import { onAuthChange, signOutUser, type User } from './lib/firebase';
 import { LandingPage } from './components/landing/LandingPage';
 import { LoginScreen } from './components/landing/LoginScreen';
 import { Sidebar, Muse } from './components/dashboard/Sidebar';
@@ -78,6 +79,18 @@ export default function App() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [view, setView] = useState<View>('landing');
   const [selectedMuse, setSelectedMuse] = useState<Muse>(DEFAULT_MUSES[0]);
+  const [authUser, setAuthUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // Listen to Firebase auth state — auto-advance view if already signed in
+  useEffect(() => {
+    const unsub = onAuthChange((user) => {
+      setAuthUser(user);
+      setAuthLoading(false);
+      if (user && view === 'login') setView('app');
+    });
+    return unsub;
+  }, []);
 
   const systemInstruction = useMemo(
     () => MUSE_INSTRUCTIONS[selectedMuse.id] ?? '',
@@ -108,6 +121,15 @@ export default function App() {
       startRecording();
     }
   }, [isConnected, isRecording, startRecording]);
+
+  // Wait for Firebase to resolve auth state before rendering
+  if (authLoading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-white">
+        <div className="w-8 h-8 rounded-full border-2 border-[#FF5E62]/30 border-t-[#FF5E62] animate-spin" />
+      </div>
+    );
+  }
 
   if (view === 'landing') {
     return <LandingPage onGetStarted={() => setView('login')} />;
@@ -205,6 +227,30 @@ export default function App() {
       >
         <ArrowLeft className="w-5 h-5 text-gray-600" />
       </button>
+
+      {/* Sign out — top right, always visible */}
+      {authUser && (
+        <div className="fixed top-6 right-6 z-[60] flex items-center gap-3">
+          {authUser.photoURL && (
+            <img
+              src={authUser.photoURL}
+              alt={authUser.displayName ?? ''}
+              className="w-8 h-8 rounded-full border border-gray-100 shadow-sm"
+            />
+          )}
+          <button
+            onClick={async () => {
+              if (isCallActive) disconnect();
+              await signOutUser();
+              setView('landing');
+            }}
+            className="p-2.5 bg-white/80 backdrop-blur-md rounded-2xl border border-gray-100 shadow-sm hover:bg-gray-50 transition-all"
+            title="Sign out"
+          >
+            <LogOut className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
