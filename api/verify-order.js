@@ -10,10 +10,14 @@ export default async function handler(req, res) {
 
   const CASHFREE_APP_ID = process.env.CASHFREE_APP_ID;
   const CASHFREE_SECRET_KEY = process.env.CASHFREE_SECRET_KEY;
-  const CASHFREE_ENV = process.env.CASHFREE_ENV || 'sandbox';
+  const CASHFREE_ENV = process.env.CASHFREE_ENV || 'production';
   const BASE = CASHFREE_ENV === 'production'
     ? 'https://api.cashfree.com'
     : 'https://sandbox.cashfree.com';
+
+  if (!CASHFREE_APP_ID || !CASHFREE_SECRET_KEY) {
+    return res.status(500).json({ error: 'Cashfree credentials not configured on server' });
+  }
 
   try {
     const response = await fetch(`${BASE}/pg/orders/${orderId}`, {
@@ -26,10 +30,12 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    if (!response.ok) return res.status(500).json({ error: data.message || 'Verification failed' });
+    if (!response.ok) {
+      return res.status(500).json({ error: data.message || 'Verification failed', details: data });
+    }
 
     res.json({ paid: data.order_status === 'PAID', status: data.order_status, amount: data.order_amount });
   } catch (err) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: err.message || 'Internal server error' });
   }
 }

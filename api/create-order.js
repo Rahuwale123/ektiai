@@ -12,10 +12,14 @@ export default async function handler(req, res) {
 
   const CASHFREE_APP_ID = process.env.CASHFREE_APP_ID;
   const CASHFREE_SECRET_KEY = process.env.CASHFREE_SECRET_KEY;
-  const CASHFREE_ENV = process.env.CASHFREE_ENV || 'sandbox';
+  const CASHFREE_ENV = process.env.CASHFREE_ENV || 'production';
   const BASE = CASHFREE_ENV === 'production'
     ? 'https://api.cashfree.com'
     : 'https://sandbox.cashfree.com';
+
+  if (!CASHFREE_APP_ID || !CASHFREE_SECRET_KEY) {
+    return res.status(500).json({ error: 'Cashfree credentials not configured on server' });
+  }
 
   const orderId = `ekti_${userId.slice(0, 8)}_${Date.now()}`;
 
@@ -42,7 +46,9 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    if (!response.ok) return res.status(500).json({ error: data.message || 'Failed to create order' });
+    if (!response.ok) {
+      return res.status(500).json({ error: data.message || data.error || 'Failed to create order', details: data });
+    }
 
     res.json({
       orderId: data.order_id,
@@ -50,6 +56,6 @@ export default async function handler(req, res) {
       amount,
     });
   } catch (err) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: err.message || 'Internal server error' });
   }
 }
